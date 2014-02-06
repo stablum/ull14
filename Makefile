@@ -25,6 +25,9 @@ wordfreqdistro.out: sort2.out
 pcfg1.out: PCFG_extractor.jar
 	java -jar PCFG_extractor.jar penn-wsj-line.txt pcfg1.out
 
+plotfreqs.png: wordfreqdistro.out freqs.gnuplot
+	cat freqs.gnuplot | gnuplot
+
 clean:
 	rm -vf *.out
 
@@ -39,3 +42,5 @@ corpora.zip:
 
 treebanks.zip:
 	wget http://www.illc.uva.nl/LaCo/clas/ull14/treebanks.zip
+
+.PHONY: plotfreqs
