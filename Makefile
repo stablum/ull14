@@ -5,8 +5,9 @@ O = out/
 C = corpora/
 T = treebanks/
 D = docs/
+TMP = tmp/
 
-all: docs wordfreqdistro.out pcfg1.out
+all: docs $(O)wordfreqdistro.out $(O)pcfg1.out
 
 help:
 	more README.md
@@ -30,39 +31,43 @@ $(O)sed2.out: $(O) $(O)sed1.out
 	cat $(O)sed1.out | grep -o '[^ )]\+)' > $(O)sed2.out
 
 $(O)sed1.out: $(O) $(C)penn-wsj-line.txt
-	cat penn-wsj-line.txt | sed 's/)/)\n/g' > $(O)sed1.out
+	cat $(C)penn-wsj-line.txt | sed 's/)/)\n/g' > $(O)sed1.out
 
-wordfreqdistro.out: sort2.out
+$(O)wordfreqdistro.out: $(O)sort2.out
 #	cat penn-wsj-line.txt | sed 's/)/)\n/g' | grep -o '[^ )]\+)' | sed 's/)//' | sort | uniq -c | sort -g -r -k 1 | sed 's/^ *//' > wordfreqdistro
-	cat sort2.out | sed 's/^ *//' > wordfreqdistro.out
+	cat sort2.out | sed 's/^ *//' > $(O)wordfreqdistro.out
 
-pcfg1.out: PCFG_extractor.jar
-	java -jar PCFG_extractor.jar penn-wsj-line.txt pcfg1.out
+$(O)pcfg1.out: $(T)PCFG_extractor.jar
+	java -jar $(T)PCFG_extractor.jar $(C)penn-wsj-line.txt $(O)pcfg1.out
 
-plotfreqs.png: wordfreqdistro.out freqs.gnuplot
+$(O)plotfreqs.png: $(O)wordfreqdistro.out freqs.gnuplot
 	cat freqs.gnuplot | gnuplot
 
 clean:
-	rm -vrf *.out $(D) $(O) $(C) $(T)
+	rm -vrf *.out $(D) $(O) $(C) $(T) $(TMP)
 
 $(C)penn-wsj-line.txt: $(C)
 
-$(C): corpora.zip
-	unzip corpora.zip -d $(C)
+$(C): $(TMP)corpora.zip
+	unzip $(TMP)corpora.zip -d $(C)
 
-PCFG_extractor.jar: $(T)
+$(T)PCFG_extractor.jar: $(T)
 
-$(T): treebanks.zip
-	unzip treebanks.zip -d $(T)
+$(T): $(TMP)treebanks.zip
+	unzip $(TMP)treebanks.zip -d $(T)
 
-corpora.zip:
-	wget $(BASE_URL)corpora.zip
+$(TMP):
+	mkdir -pv $(TMP)
 
-treebanks.zip:
-	wget $(BASE_URL)treebanks.zip
+$(TMP)corpora.zip: $(TMP)
+	cd $(TMP) && wget $(BASE_URL)corpora.zip
+
+$(TMP)treebanks.zip: $(TMP)
+	cd $(TMP) && wget $(BASE_URL)treebanks.zip
 
 $(D):
 	mkdir -pv $(D)
 	cd docs && wget -nd -A pdf,txt -r -l 1 $(BASE_URL)
 
 .PHONY: plotfreqs help
+
