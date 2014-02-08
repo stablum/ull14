@@ -1,22 +1,36 @@
-all: wordfreqdistro.out pcfg1.out
+# vim: set noexpandtab :
 
-sort2.out: uniq1.out
-	cat uniq1.out | sort -g -r -k 1 > sort2.out
+BASE_URL = http://www.illc.uva.nl/LaCo/clas/ull14/
+O = out/
+C = corpora/
+T = treebanks/
+D = docs/
 
-uniq1.out: sort1.out
-	cat sort1.out | uniq -c > uniq1.out
+all: docs wordfreqdistro.out pcfg1.out
 
-sort1.out: sed3.out
-	cat sed3.out | sort > sort1.out
+help:
+	more README.md
 
-sed3.out: sed2.out
-	cat sed2.out | sed 's/)//' > sed3.out
+$(O):
+	mkdir -pv $(O)
 
-sed2.out: sed1.out
-	cat sed1.out | grep -o '[^ )]\+)' > sed2.out
+$(O)sort2.out: $(O) $(O)uniq1.out
+	cat $(O)uniq1.out | sort -g -r -k 1 > $(O)sort2.out
 
-sed1.out: penn-wsj-line.txt
-	cat penn-wsj-line.txt | sed 's/)/)\n/g' > sed1.out
+$(O)uniq1.out: $(O) $(O)sort1.out
+	cat $(O)sort1.out | uniq -c > $(O)uniq1.out
+
+$(O)sort1.out: $(O) $(O)sed3.out
+	cat $(O)sed3.out | sort > $(O)sort1.out
+
+$(O)sed3.out: $(O) $(O)sed2.out
+	cat $(O)sed2.out | sed 's/)//' > $(O)sed3.out
+
+$(O)sed2.out: $(O) $(O)sed1.out
+	cat $(O)sed1.out | grep -o '[^ )]\+)' > $(O)sed2.out
+
+$(O)sed1.out: $(O) $(C)penn-wsj-line.txt
+	cat penn-wsj-line.txt | sed 's/)/)\n/g' > $(O)sed1.out
 
 wordfreqdistro.out: sort2.out
 #	cat penn-wsj-line.txt | sed 's/)/)\n/g' | grep -o '[^ )]\+)' | sed 's/)//' | sort | uniq -c | sort -g -r -k 1 | sed 's/^ *//' > wordfreqdistro
@@ -29,18 +43,26 @@ plotfreqs.png: wordfreqdistro.out freqs.gnuplot
 	cat freqs.gnuplot | gnuplot
 
 clean:
-	rm -vf *.out
+	rm -vrf *.out $(D) $(O) $(C) $(T)
 
-penn-wsj-line.txt: corpora.zip
-	unzip corpora.zip
+$(C)penn-wsj-line.txt: $(C)
 
-PCFG_extractor.jar: treebanks.zip
-	unzip treebanks.zip
+$(C): corpora.zip
+	unzip corpora.zip -d $(C)
+
+PCFG_extractor.jar: $(T)
+
+$(T): treebanks.zip
+	unzip treebanks.zip -d $(T)
 
 corpora.zip:
-	wget http://www.illc.uva.nl/LaCo/clas/ull14/corpora.zip
+	wget $(BASE_URL)corpora.zip
 
 treebanks.zip:
-	wget http://www.illc.uva.nl/LaCo/clas/ull14/treebanks.zip
+	wget $(BASE_URL)treebanks.zip
 
-.PHONY: plotfreqs
+$(D):
+	mkdir -pv $(D)
+	cd docs && wget -nd -A pdf,txt -r -l 1 $(BASE_URL)
+
+.PHONY: plotfreqs help
