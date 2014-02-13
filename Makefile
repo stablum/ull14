@@ -8,7 +8,7 @@ D = docs/
 TMP = tmp/
 WSJ = $(C)penn-wsj-line.txt
 
-all: docs $(O)wordfreqdistro.out $(O)pcfg1.out
+all: docs $(O)wordfreqdistro.out $(O)pcfg1.out $(O)no_lexical_items
 
 help:
 	more README.md
@@ -47,14 +47,20 @@ $(O)plotfreqs.png: $(O)wordfreqdistro.out freqs.gnuplot
 $(O)tmp0: $(WSJ)
 	cat $(WSJ) | sed 's/(NP[^ ]* /(NP /g;s/(\([A-Z]\+\) (NP/(NP-\1 /g' > $(O)tmp0
 
-$(O)tmp1: $(O)tmp0
-	cat $(O)tmp0 | sed 's/(/( /g;s/) )/g;s/ \+/ /g' | sed 's/%/PERCENT/g' > $(O)tmp1
+$(O)tmp0b: $(O)tmp0
+	cat $(O)tmp0 | sed 's/(/( /g;s/)/ )/g;s/ \+/ /g' > $(O)tmp0b
+
+$(O)tmp1: $(O)tmp0b
+	cat $(O)tmp0b | sed 's/%/PERCENT/g' > $(O)tmp1
 
 $(O)tmp2: $(O)tmp1
 	cat $(O)tmp1 | awk '{j=0; for (i=1;i<=NF;i++) {printf " " $$i; if ($$i=="(") printf ++j; else if ($$i==")") printf j--; } printf "\n"; }' > $(O)tmp2
 
 $(O)complete_span: $(O)tmp2
-	cat $(O) | grep -oP '\(([0-9]+) NP-S.*?\)\1'
+	cat $(O)tmp2 | grep -oP '\(([0-9]+) NP-S.*?\)\1' > $(O)complete_span
+
+$(O)no_lexical_items : $(O)complete_span
+	cat $(O)complete_span | sed 's/\([0-9][0-9]*\) \([A-Z]*\) \([^)]*\)/\1 \2 x/g' > $(O)no_lexical_items
 
 clean:
 	rm -vrf *.out $(D) $(O) $(C) $(T) $(TMP)
