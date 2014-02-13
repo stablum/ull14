@@ -36,13 +36,16 @@ $(O)sed1.out: $(O) $(WSJ)
 
 $(O)wordfreqdistro.out: $(O)sort2.out
 #	cat penn-wsj-line.txt | sed 's/)/)\n/g' | grep -o '[^ )]\+)' | sed 's/)//' | sort | uniq -c | sort -g -r -k 1 | sed 's/^ *//' > wordfreqdistro
-	cat sort2.out | sed 's/^ *//' > $(O)wordfreqdistro.out
+	cat $(O)sort2.out | sed 's/^ *//' > $(O)wordfreqdistro.out
 
 $(O)pcfg1.out: $(T)PCFG_extractor.jar
 	java -jar $(T)PCFG_extractor.jar $(C)penn-wsj-line.txt $(O)pcfg1.out
 
-$(O)plotfreqs.png: $(O)wordfreqdistro.out freqs.gnuplot
+$(O)plotfreqs.ps: $(O)wordfreqdistro.out freqs.gnuplot
 	cat freqs.gnuplot | gnuplot
+
+$(O)plotfreqs.png: $(O)plotfreqs.ps
+	convert $(O)plotfreqs.ps $(O)plotfreqs.png
 
 $(O)tmp0: $(WSJ)
 	cat $(WSJ) | sed 's/(NP[^ ]* /(NP /g;s/(\([A-Z]\+\) (NP/(NP-\1 /g' > $(O)tmp0

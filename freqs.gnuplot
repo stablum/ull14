@@ -1,4 +1,5 @@
-set output "plotfreqs.png"
+set term postscript
+set output "out/plotfreqs.ps"
 set logscale xy
-plot 'wordfreqdistro.out' u ($0):($1)
+plot 'out/wordfreqdistro.out' u ($0):($1)
 
