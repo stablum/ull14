@@ -5,3 +5,5 @@
 docs
 corpora/
 treebanks/
+out/
+tmp/
